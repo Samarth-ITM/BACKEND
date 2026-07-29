@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+
+<body>
+    <h1>Stopwatch</h1>
+    <div id="stopwatch">
+        <p id="stopwatch-time">00:00:00</p>
+        <button id="start-stopwatch">Start</button>
+        <button id="stop-stopwatch">Stop</button>
+        <button id="reset-stopwatch">Reset</button>
+    </div>
+</body>
+<script>
+    let stopwatchInterval;
+    let stopwatchTime = 0;
+    let isRunning = false;
+
+    function updateStopwatch() {
+        const hours = Math.floor(stopwatchTime / 3600);
+        const minutes = Math.floor((stopwatchTime % 3600) / 60);
+        const seconds = stopwatchTime % 60;
+        const timeString = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`;
+        document.getElementById('stopwatch-time').textContent = timeString;
+    }
+
+    document.getElementById('start-stopwatch').addEventListener('click', () => {
+        if (!isRunning) {
+            isRunning = true;
+            stopwatchInterval = setInterval(() => {
+                stopwatchTime++;
+                updateStopwatch();
+            }, 1000);
+        }
+    });
+
+    document.getElementById('stop-stopwatch').addEventListener('click', () => {
+        if (isRunning) {
+            isRunning = false;
+            clearInterval(stopwatchInterval);
+        }
+    });
+
+    document.getElementById('reset-stopwatch').addEventListener('click', () => {
+        isRunning = false;
+        clearInterval(stopwatchInterval);
+        stopwatchTime = 0;
+        updateStopwatch();
+    });
+</script>
+
+</html>
