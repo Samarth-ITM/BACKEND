@@ -6,29 +6,7 @@ app.use(express.json());
 
 let college = [];
 
-app.get("/college", (req, res) => {
-    try {
-        res.status(200).json({ message: "college successfuly created" });
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-app.get("/college/:id", (req, res) => {
-    try {
-        const college = college.find(c => c.id == req.params.id);
-        if (!college) {
-            return res.status(404).json({ message: "College not found" });
-        }
-        else {
-            response.status(200).json(college);
-        }
-    } catch (error) {
-        res.status(500).json({ message: error.message });
-    }
-});
-
-app.post("/college", (req, res) => {
+app.post("/", (req, res) => {
     try {
         const newCollege = {
             id: college.length + 1,
@@ -43,7 +21,31 @@ app.post("/college", (req, res) => {
     }
 });
 
-app.put("/college/:id", (req, res) => {
+app.get("/management", (req, res) => {
+    try {
+        res.status(200).json({ message: "college successfuly created" });
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+app.get("/management/:id", (req, res) => {
+    try {
+        const college = college.find(c => c.id == req.params.id);
+        if (!college) {
+            return res.status(404).json({ message: "College not found" });
+        }
+        else {
+            response.status(200).json(college);
+        }
+    } catch (error) {
+        res.status(500).json({ message: error.message });
+    }
+});
+
+
+
+app.put("/management/:id", (req, res) => {
     try {
         college.find(c => c.id == req.params.id);
         if (!college) {
