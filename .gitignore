@@ -1,2 +1,4 @@
 Fashnaiapi.zip
 .agents
+# Local Netlify folder
+.netlify
