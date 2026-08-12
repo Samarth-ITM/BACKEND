@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: employees-crud-api
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: SUPABASE_URL
+        value: https://ljqcepgtyzbggezqlxdd.supabase.co
+      - key: SUPABASE_ANON_KEY
+        value: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImxqcWNlcGd0eXpiZ2dlenFseGRkIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODY0MjMyOTYsImV4cCI6MjEwMTk5OTI5Nn0.qIC3F8vqh0_7L_rs4zE4dRo7hsTGsABgIZL2Kb2195A
