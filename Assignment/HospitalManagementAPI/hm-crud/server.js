@@ -6,9 +6,9 @@ const LocalStrategy = require("passport-local").Strategy;
 const bcrypt = require("bcryptjs");
 
 const db = require("./config/db");
-const User = require("./models/user");
-const authRouter = require("./router/authrouter");
-const hospitalRouter = require("./router/hospitalrouter");
+const User = require("./models/User");
+const authRoutes = require("./routes/authRoutes");
+const hospitalRoutes = require("./routes/hospitalRoutes");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -65,9 +65,9 @@ app.use(session({
 app.use(passport.initialize());
 app.use(passport.session());
 
-app.use("/", authRouter);
-app.use("/", hospitalRouter);
+app.use("/", authRoutes);
+app.use("/", hospitalRoutes);
 
 app.listen(PORT, () => {
-    console.log(`Server is running on port ${PORT}`);
+    console.log(`Server running on Port ${PORT}`);
 });

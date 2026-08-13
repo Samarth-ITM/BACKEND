@@ -1,15 +1,13 @@
-const express = require("express");
-const router = express.Router();
 const mongoose = require("mongoose");
-const Hospital = require("../models/hospital");
+const Hospital = require("../models/Hospital");
 
-router.get("/", (req, res) => {
+const getWelcomeMessage = (req, res) => {
     res.json({
         message: "Welcome to Hospital API"
     });
-});
+};
 
-router.get("/hospitals", async (req, res) => {
+const getAllHospitals = async (req, res) => {
     try {
         const hospitals = await Hospital.find();
         res.json(hospitals);
@@ -18,9 +16,9 @@ router.get("/hospitals", async (req, res) => {
             message: error.message
         });
     }
-});
+};
 
-router.get("/hospitals/available", async (req, res) => {
+const getAvailableHospitals = async (req, res) => {
     try {
         const hospitals = await Hospital.find({ availableBeds: { $gt: 0 } });
         res.json(hospitals);
@@ -29,9 +27,9 @@ router.get("/hospitals/available", async (req, res) => {
             message: error.message
         });
     }
-});
+};
 
-router.get("/hospitals/:id", async (req, res) => {
+const getHospitalById = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -48,15 +46,16 @@ router.get("/hospitals/:id", async (req, res) => {
                 message: "Hospital Not Found"
             });
         }
+
         res.json(hospital);
     } catch (error) {
         res.status(500).json({
             message: error.message
         });
     }
-});
+};
 
-router.post("/hospitals", async (req, res) => {
+const addHospital = async (req, res) => {
     try {
         const { name, city, totalBeds, availableBeds } = req.body;
 
@@ -84,9 +83,9 @@ router.post("/hospitals", async (req, res) => {
             message: error.message
         });
     }
-});
+};
 
-router.put("/hospitals/:id", async (req, res) => {
+const updateHospital = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -122,9 +121,9 @@ router.put("/hospitals/:id", async (req, res) => {
             message: error.message
         });
     }
-});
+};
 
-router.delete("/hospitals/:id", async (req, res) => {
+const deleteHospital = async (req, res) => {
     try {
         const { id } = req.params;
 
@@ -150,6 +149,14 @@ router.delete("/hospitals/:id", async (req, res) => {
             message: error.message
         });
     }
-});
+};
 
-module.exports = router;
+module.exports = {
+    getWelcomeMessage,
+    getAllHospitals,
+    getAvailableHospitals,
+    getHospitalById,
+    addHospital,
+    updateHospital,
+    deleteHospital
+};

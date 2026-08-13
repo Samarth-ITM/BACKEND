@@ -1,10 +1,7 @@
-const express = require("express");
-const router = express.Router();
 const bcrypt = require("bcryptjs");
-const passport = require("passport");
-const User = require("../models/user");
+const User = require("../models/User");
 
-router.post("/register", async (req, res) => {
+const register = async (req, res) => {
     try {
         const { username, email, password } = req.body;
 
@@ -40,12 +37,15 @@ router.post("/register", async (req, res) => {
             message: error.message
         });
     }
-});
+};
 
-router.post("/login", passport.authenticate("local"), (req, res) => {
+const login = (req, res) => {
     res.json({
         message: "Login Successful"
     });
-});
+};
 
-module.exports = router;
+module.exports = {
+    register,
+    login
+};
