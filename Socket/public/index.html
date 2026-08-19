@@ -1,42 +1,107 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Stop Watch</title>
-  </head>
-  <body>
-    <h1>Stop Watch</h1>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Users CRUD App</title>
+</head>
+<body>
+    <h1>Users CRUD App Using Socket</h1>
 
-    <h2><span id="time">00:00:00</span></h2>
+    <table border="1">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Name</th>
+                <th>Email</th>
+                <th>Password</th>
+                <th>EDIT</th>
+                <th>DELETE</th>
+            </tr>
+        </thead>
+        <tbody id="result"></tbody>
+    </table>
+
+    <br>
 
     <div>
-      <button onClick="start()">Start</button>
-      <button onClick="stop()">Stop</button>
-      <button onClick="reset()">Reset</button>
+        <h3 id="form-title">Add User</h3>
+        <input type="hidden" id="userId">
+        Enter Name: <input id="name"><br><br>
+        Enter Email: <input id="email"><br><br>
+        Enter Password: <input id="password"><br><br>
+        <button id="submitBtn" onclick="saveUser()">Add User</button>
+        <button id="cancelBtn" onclick="resetForm()" style="display:none;">Cancel</button>
     </div>
 
     <script src="/socket.io/socket.io.js"></script>
-
     <script>
-      const socket = io();
+        const socket = io();
+        let usersList = [];
 
-      socket.on("timer", (data) => {
-        document.getElementById("time").innerHTML =
-          `${data.hours}:${data.minutes}:${data.seconds}`;
-      });
+        socket.on('users', (users) => {
+            usersList = users;
+            const result = document.getElementById('result');
+            result.innerHTML = "";
+            users.forEach((user) => {
+                result.innerHTML += `
+                <tr>
+                    <td>${user.id}</td>
+                    <td>${user.name}</td>
+                    <td>${user.email}</td>
+                    <td>${user.password}</td>
+                    <td><button onclick="editUser(${user.id})">Edit</button></td>
+                    <td><button onclick="deleteUser(${user.id})">Delete</button></td>
+                </tr>
+                `;
+            });
+        });
 
-      function start() {
-        socket.emit("timerStart");
-      }
+        function saveUser() {
+            let id = document.getElementById('userId').value;
+            let name = document.getElementById('name').value;
+            let email = document.getElementById('email').value;
+            let password = document.getElementById('password').value;
 
-      function stop() {
-        socket.emit("timerStop");
-      }
+            if (id) {
+                socket.emit('update-user', { id: Number(id), name, email, password });
+            } else {
+                socket.emit('add-user', { name, email, password });
+            }
 
-      function reset() {
-        socket.emit("timerReset");
-      }
+            resetForm();
+        }
+
+        function editUser(id) {
+            let user = usersList.find(u => u.id === id);
+            if (!user) return;
+
+            document.getElementById('userId').value = user.id;
+            document.getElementById('name').value = user.name;
+            document.getElementById('email').value = user.email;
+            document.getElementById('password').value = user.password;
+
+            document.getElementById('form-title').innerText = "Edit User #" + user.id;
+            document.getElementById('submitBtn').innerText = "Update User";
+            document.getElementById('cancelBtn').style.display = "inline";
+        }
+
+        function deleteUser(id) {
+            socket.emit('delete-user', id);
+        }
+
+        function resetForm() {
+            document.getElementById('userId').value = "";
+            document.getElementById('name').value = "";
+            document.getElementById('email').value = "";
+            document.getElementById('password').value = "";
+
+            document.getElementById('form-title').innerText = "Add User";
+            document.getElementById('submitBtn').innerText = "Add User";
+            document.getElementById('cancelBtn').style.display = "none";
+        }
     </script>
-  </body>
+</body>
 </html>
+
+

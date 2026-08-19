@@ -1,59 +1,60 @@
-const express = require("express");
-const http = require("http");
+const express = require('express');
+const http = require('http');
 const { Server } = require("socket.io");
 
 const app = express();
 const server = http.createServer(app);
 const io = new Server(server);
 
-app.use(express.static("public"));
+app.use(express.static('public'));
 
-let hours = 0;
-let minutes = 0;
-let seconds = 0;
-let interval = null;
+let users = [
+    { id: 1, name: "Amit", email: "amit@gmail.com", password: "amit@1123" },
+    { id: 2, name: "Sunil", email: "sunil@gmail.com", password: "sunil@1123" }
+];
 
-function start() {
-  if (!interval) {
-    interval = setInterval(() => {
-      seconds++;
-      if (seconds == 60) {
-        seconds = 0;
-        minutes++;
-        if (minutes == 60) {
-          minutes = 0;
-          hours++;
+io.on('connection', (socket) => {
+    console.log("User with ID: " + socket.id + " is connected");
+
+    // Send users list on connection
+    socket.emit('users', users);
+
+    socket.on('add-user', (data) => {
+        const nextId = users.length > 0 ? Math.max(...users.map(u => u.id)) + 1 : 1;
+        const newUser = {
+            id: nextId,
+            name: data.name,
+            email: data.email,
+            password: data.password
+        };
+        users.push(newUser);
+        io.emit('users', users);
+    });
+
+    socket.on('update-user', (data) => {
+        const index = users.findIndex(u => u.id === Number(data.id));
+        if (index !== -1) {
+            users[index] = {
+                id: Number(data.id),
+                name: data.name,
+                email: data.email,
+                password: data.password
+            };
+            io.emit('users', users);
         }
-      }
-      io.emit("timer", { hours, minutes, seconds });
-    }, 1000);
-  }
-}
+    });
 
-function stop() {
-  clearInterval(interval);
-}
+    socket.on('delete-user', (id) => {
+        users = users.filter(u => u.id !== Number(id));
+        io.emit('users', users);
+    });
 
-function reset() {
-  stop();
-  hours = 0;
-  minutes = 0;
-  seconds = 0;
-  io.emit("timer", { hours, minutes, seconds });
-}
-
-io.on("connection", (socket) => {
-  console.log("User with ID: " + socket.id + " is connected...");
-
-  socket.on("timerStart", start);
-  socket.on("timerStop", stop);
-  socket.on("timerReset", reset);
-
-  socket.on("disconnect", () => {
-    console.log("User with ID: " + socket.id + " is disconnected...");
-  });
+    socket.on('disconnect', () => {
+        console.log("User with ID: " + socket.id + " is disconnected");
+    });
 });
 
-server.listen(4000, () => {
-  console.log("Server is running on port 4000");
+server.listen(3000, () => {
+    console.log('Server is listening on port 3000');
 });
+
