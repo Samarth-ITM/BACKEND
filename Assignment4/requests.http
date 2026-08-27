@@ -1,0 +1,110 @@
+@host = http://localhost:4000
+
+GET {{host}}/
+
+###
+# @name register
+POST {{host}}/register
+Content-Type: application/json
+
+{
+  "username": "samarth_navale",
+  "email": "samarth.navale@salonsbackend.com",
+  "password": "Password@123"
+}
+
+###
+# @name login
+POST {{host}}/login
+Content-Type: application/json
+
+{
+  "email": "samarth.navale@salonsbackend.com",
+  "password": "Password@123"
+}
+
+@token = {{login.response.body.token}}
+
+###
+GET {{host}}/salons
+
+###
+GET {{host}}/salons/top
+
+###
+GET {{host}}/salons/city/Pune
+
+###
+# @name createSalon
+POST {{host}}/salons
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "name": "Luxe Glow Salon",
+  "city": "Pune",
+  "address": "FC Road, Shivajinagar",
+  "rating": 4.8
+}
+
+@salonId = {{createSalon.response.body.salon.id}}
+
+###
+GET {{host}}/salons/{{salonId}}
+
+###
+PUT {{host}}/salons/{{salonId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "rating": 4.9
+}
+
+###
+GET {{host}}/salons/{{salonId}}/services
+
+###
+# @name createService
+POST {{host}}/salons/{{salonId}}/services
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "serviceName": "Haircut & Styling",
+  "price": 450,
+  "duration": "45 min",
+  "isAvailable": true
+}
+
+@serviceId = {{createService.response.body.service.id}}
+
+###
+GET {{host}}/services/available
+
+###
+PUT {{host}}/services/{{serviceId}}
+Content-Type: application/json
+Authorization: Bearer {{token}}
+
+{
+  "price": 500,
+  "isAvailable": true
+}
+
+###
+DELETE {{host}}/services/{{serviceId}}
+Authorization: Bearer {{token}}
+
+###
+DELETE {{host}}/salons/{{salonId}}
+Authorization: Bearer {{token}}
+
+###
+POST {{host}}/salons
+Content-Type: application/json
+
+{
+  "name": "Unauthorized Salon",
+  "city": "Pune"
+}
