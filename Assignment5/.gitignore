@@ -1,2 +1,7 @@
-/node_modules
+node_modules/
 .env
+.env.local
+.DS_Store
+Samarth_Navale_150096725148/.env
+Samarth_Navale_150096725148/.env.local
+Samarth_Navale_150096725148/node_modules/

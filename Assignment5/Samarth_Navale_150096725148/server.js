@@ -15,7 +15,7 @@ const server = http.createServer(app);
 const io = new Server(server);
 
 const PORT = process.env.PORT || 3000;
-const MONGO_URI = process.env.MONGO_URI || "mongodb://localhost:27017/tictactoe";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://rougeparrot_db_user:d4ds62FCCJvkri5I@hm-crud.idwimmo.mongodb.net/tictactoe";
 
 const gameSchema = new mongoose.Schema(
   {
