@@ -16,7 +16,6 @@ let users = [
 io.on('connection', (socket) => {
     console.log("User with ID: " + socket.id + " is connected");
 
-    // Send users list on connection
     socket.emit('users', users);
 
     socket.on('add-user', (data) => {

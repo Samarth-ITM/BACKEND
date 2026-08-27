@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tic Tac Toe</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="container">
+    <div class="top-bar">
+      <div>Connection: <span id="connection-status">Disconnected</span></div>
+      <div>Active Players: <span id="player-count">0/2</span></div>
+    </div>
+
+    <h1>Tic Tac Toe</h1>
+
+    <div id="login-section" class="box">
+      <h2>User Login</h2>
+      <div class="input-group">
+        <label for="username-input">Username</label>
+        <input type="text" id="username-input" placeholder="Enter username">
+      </div>
+      <button id="join-btn">Join Game</button>
+      <div id="login-error" class="error-msg hidden"></div>
+    </div>
+
+    <div id="waiting-section" class="box hidden">
+      <p>Logged in as <strong id="my-name"></strong> (Symbol: <strong id="my-symbol"></strong>)</p>
+      <p>Waiting for second player to join...</p>
+    </div>
+
+    <div id="game-section" class="box hidden">
+      <div class="players-info">
+        <div>Player X: <span id="player-x-name">-</span></div>
+        <div>Player O: <span id="player-o-name">-</span></div>
+      </div>
+      <div class="turn-info">
+        <div>Your Symbol: <strong id="user-symbol">-</strong></div>
+        <div>Turn: <strong id="turn-display">-</strong></div>
+      </div>
+
+      <div id="board" class="board">
+        <button class="cell" data-index="0"></button>
+        <button class="cell" data-index="1"></button>
+        <button class="cell" data-index="2"></button>
+        <button class="cell" data-index="3"></button>
+        <button class="cell" data-index="4"></button>
+        <button class="cell" data-index="5"></button>
+        <button class="cell" data-index="6"></button>
+        <button class="cell" data-index="7"></button>
+        <button class="cell" data-index="8"></button>
+      </div>
+    </div>
+
+    <div class="box">
+      <h2>Game History</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Player X</th>
+            <th>Player O</th>
+            <th>Winner</th>
+            <th>Total Moves</th>
+            <th>Date/Time</th>
+          </tr>
+        </thead>
+        <tbody id="history-body">
+          <tr>
+            <td colspan="5" class="empty-cell">No games played yet</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div id="winner-modal" class="modal hidden">
+      <div class="modal-box">
+        <h2 id="winner-text">Winner Announcement</h2>
+        <button id="reset-btn">Play Again</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="/socket.io/socket.io.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

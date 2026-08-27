@@ -8,6 +8,19 @@
 <body>
     <h1>Users CRUD App Using Socket</h1>
 
+    <h2>Find User</h2> 
+    <input type="text" id='txt' placeholder="Enter Name">
+    <button type="submit" id='sub' onclick="finduser()">Submit</button>
+
+    <ul id="found">
+        
+    </ul>
+
+    <br>
+    <br>
+
+
+
     <table border="1">
         <thead>
             <tr>
@@ -50,12 +63,35 @@
                     <td>${user.name}</td>
                     <td>${user.email}</td>
                     <td>${user.password}</td>
-                    <td><button onclick="editUser(${user.id})">Edit</button></td>
-                    <td><button onclick="deleteUser(${user.id})">Delete</button></td>
+                    <td> <button onclick="editUser(${user.id})"> Edit </button> </td>
+                    <td> <button onclick="deleteUser(${user.id})"> Delete </button> </td>
                 </tr>
                 `;
             });
         });
+
+        function finduser(){
+            let inp = document.getElementById('txt').value.trim();
+            const listContainer = document.getElementById('found');
+            let htmlContent = '';
+
+            if (!inp) {
+                listContainer.innerHTML = '';
+                return;
+            }
+
+            let founduser = usersList.filter(u => u.name.toLowerCase().includes(inp.toLowerCase()));
+
+            if (founduser.length > 0){
+                for (let i = 0; i < founduser.length; i++) {
+                    htmlContent += `<li>ID: ${founduser[i].id} - ${founduser[i].name} (${founduser[i].email})</li>`; 
+                }
+            } else {
+                htmlContent = `<li>User Not Found</li>`;
+            }
+
+            listContainer.innerHTML = htmlContent;
+        }
 
         function saveUser() {
             let id = document.getElementById('userId').value;
