@@ -1,0 +1,419 @@
+openapi: 3.0.0
+info:
+  title: 📚 Library Management System API
+  description: Complete REST API for Library Management with Node.js, Express, JWT, and Firebase Firestore
+  version: 1.0.0
+servers:
+  - url: http://localhost:5000
+    description: Local Development Server
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Enter your JWT token obtained from /api/auth/login or /api/auth/register
+
+  schemas:
+    RegisterInput:
+      type: object
+      required:
+        - name
+        - email
+        - password
+      properties:
+        name:
+          type: string
+          example: Jane Doe
+        email:
+          type: string
+          example: jane@example.com
+        password:
+          type: string
+          example: secret123
+        role:
+          type: string
+          enum: [student, librarian]
+          default: student
+          example: student
+
+    LoginInput:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          example: jane@example.com
+        password:
+          type: string
+          example: secret123
+
+    BookInput:
+      type: object
+      required:
+        - title
+        - author
+        - isbn
+        - category
+        - quantity
+      properties:
+        title:
+          type: string
+          example: Clean Code
+        author:
+          type: string
+          example: Robert C. Martin
+        isbn:
+          type: string
+          example: 978-0132350884
+        category:
+          type: string
+          example: Computer Science
+        quantity:
+          type: integer
+          example: 5
+
+    UpdateRoleInput:
+      type: object
+      required:
+        - role
+      properties:
+        role:
+          type: string
+          enum: [student, librarian]
+          example: librarian
+
+paths:
+  /api/auth/register:
+    post:
+      summary: Register a new user (Student or Librarian)
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterInput'
+      responses:
+        201:
+          description: User registered successfully
+        400:
+          description: Validation error or Email already exists
+
+  /api/auth/login:
+    post:
+      summary: User Login & JWT Token Retrieval
+      tags:
+        - Authentication
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginInput'
+      responses:
+        200:
+          description: Login successful with JWT token
+        401:
+          description: Invalid email or password
+
+  /api/auth/profile:
+    get:
+      summary: Get logged-in user profile
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: User profile details
+        401:
+          description: Unauthorized
+    put:
+      summary: Update logged-in user profile
+      tags:
+        - Authentication
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+      responses:
+        200:
+          description: Profile updated successfully
+        401:
+          description: Unauthorized
+
+  /api/books:
+    get:
+      summary: Get all books with optional filtering
+      tags:
+        - Books
+      parameters:
+        - in: query
+          name: category
+          schema:
+            type: string
+          description: Filter books by category
+        - in: query
+          name: status
+          schema:
+            type: string
+            enum: [available, borrowed]
+          description: Filter books by availability status
+        - in: query
+          name: author
+          schema:
+            type: string
+          description: Filter books by author name
+      responses:
+        200:
+          description: List of books
+    post:
+      summary: Add a new book (Librarian only)
+      tags:
+        - Books
+      security:
+        - BearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookInput'
+      responses:
+        201:
+          description: Book created successfully
+        401:
+          description: Unauthorized
+        403:
+          description: Forbidden (Librarian role required)
+
+  /api/books/search:
+    get:
+      summary: Search books by title or author
+      tags:
+        - Books
+      parameters:
+        - in: query
+          name: q
+          required: true
+          schema:
+            type: string
+          description: Search term for title or author
+      responses:
+        200:
+          description: Search results
+        400:
+          description: Search query parameter missing
+
+  /api/books/{id}:
+    get:
+      summary: Get single book details by ID
+      tags:
+        - Books
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Book details
+        404:
+          description: Book not found
+    put:
+      summary: Update book details (Librarian only)
+      tags:
+        - Books
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BookInput'
+      responses:
+        200:
+          description: Book updated successfully
+        403:
+          description: Forbidden (Librarian role required)
+    delete:
+      summary: Delete a book (Librarian only)
+      tags:
+        - Books
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Book deleted successfully
+        403:
+          description: Forbidden (Librarian role required)
+
+  /api/books/{id}/borrow:
+    post:
+      summary: Borrow a book (Student only)
+      tags:
+        - Borrow / Return
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Book borrowed successfully
+        400:
+          description: Book unavailable or already borrowed
+        403:
+          description: Forbidden (Student role required)
+
+  /api/books/{id}/return:
+    post:
+      summary: Return a borrowed book (Student only)
+      tags:
+        - Borrow / Return
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: Book returned successfully
+        400:
+          description: Active borrow record not found
+        403:
+          description: Forbidden (Student role required)
+
+  /api/transactions:
+    get:
+      summary: Get all borrowing transactions (Librarian only)
+      tags:
+        - Transactions
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: All transaction logs
+        403:
+          description: Forbidden (Librarian role required)
+
+  /api/transactions/my:
+    get:
+      summary: Get current user's transaction history
+      tags:
+        - Transactions
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: Personal transaction history
+        401:
+          description: Unauthorized
+
+  /api/users:
+    get:
+      summary: Get all users (Librarian only)
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      responses:
+        200:
+          description: List of registered users
+        403:
+          description: Forbidden (Librarian role required)
+
+  /api/users/{id}:
+    get:
+      summary: Get specific user details by ID (Librarian only)
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User details
+        404:
+          description: User not found
+    delete:
+      summary: Delete a user by ID (Librarian only)
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        200:
+          description: User deleted
+        403:
+          description: Forbidden
+
+  /api/users/{id}/role:
+    put:
+      summary: Update user role (Librarian only)
+      tags:
+        - User Management
+      security:
+        - BearerAuth: []
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateRoleInput'
+      responses:
+        200:
+          description: User role updated
+        403:
+          description: Forbidden

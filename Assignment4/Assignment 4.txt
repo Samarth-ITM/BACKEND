@@ -1,2 +1,0 @@
-Assignment 4: Salon Management API
-Samarth Navale, 150096725148

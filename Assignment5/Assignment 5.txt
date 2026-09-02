@@ -1,4 +1,0 @@
-Assignment 5 :- Real-Time Tic Tac Toe
-Samarth Navale, 150096725148
-
-Link :- https://itm-real-time-tic-tac-toe-game.netlify.app/
