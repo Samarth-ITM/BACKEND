@@ -1,0 +1,55 @@
+### Welcome Route
+GET http://localhost:3000/
+
+### Register User
+POST http://localhost:3000/register
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "email": "john@example.com",
+  "password": "password123"
+}
+
+### Login User
+POST http://localhost:3000/login
+Content-Type: application/json
+
+{
+  "username": "johndoe",
+  "password": "password123"
+}
+
+### Add Hotel
+POST http://localhost:3000/hotels
+Content-Type: application/json
+
+{
+  "name": "Grand Palace Hotel",
+  "location": "Mumbai",
+  "rating": 4.8,
+  "pricePerNight": 2500
+}
+
+### Get All Hotels
+GET http://localhost:3000/hotels
+
+### Filter Hotels by Rating
+GET http://localhost:3000/hotels?rating=4.8
+
+### Get Hotel by ID
+GET http://localhost:3000/hotels/1
+
+### Update Hotel
+PUT http://localhost:3000/hotels/1
+Content-Type: application/json
+
+{
+  "name": "Grand Palace Resort & Spa",
+  "location": "Mumbai",
+  "rating": 4.9,
+  "pricePerNight": 3000
+}
+
+### Delete Hotel
+DELETE http://localhost:3000/hotels/1

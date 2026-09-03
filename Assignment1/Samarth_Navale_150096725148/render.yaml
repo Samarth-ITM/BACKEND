@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: samarth-assignment-1-hotel-management-api
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: SESSION_SECRET
+        generateValue: true

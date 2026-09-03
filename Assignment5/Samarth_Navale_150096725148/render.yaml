@@ -1,0 +1,11 @@
+services:
+  - type: web
+    name: samarth-assignment-5-real-time-tic-tac-toe-game
+    env: node
+    buildCommand: npm install
+    startCommand: npm start
+    envVars:
+      - key: PORT
+        value: 3000
+      - key: MONGO_URI
+        sync: false
