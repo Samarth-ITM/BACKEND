@@ -1,4 +1,10 @@
 import React, { useState, useEffect } from "react";
+import { auth, isFirebaseConfigured } from "./firebase";
+import {
+  createUserWithEmailAndPassword,
+  signInWithEmailAndPassword,
+  signOut
+} from "firebase/auth";
 
 interface User {
   id: string;
@@ -77,6 +83,16 @@ export default function App() {
     e.preventDefault();
     setMessage("");
     try {
+      if (isFirebaseConfigured && auth) {
+        try {
+          await createUserWithEmailAndPassword(auth, authForm.email, authForm.password);
+        } catch (fbErr: any) {
+          if (fbErr.code !== "auth/email-already-in-use") {
+            throw new Error(`Firebase Auth Error: ${fbErr.message}`);
+          }
+        }
+      }
+
       await request("/auth/register", {
         method: "POST",
         body: JSON.stringify(authForm)
@@ -92,6 +108,14 @@ export default function App() {
     e.preventDefault();
     setMessage("");
     try {
+      if (isFirebaseConfigured && auth) {
+        try {
+          await signInWithEmailAndPassword(auth, authForm.email, authForm.password);
+        } catch (fbErr: any) {
+          console.warn("Firebase sign-in note:", fbErr.message);
+        }
+      }
+
       const data = await request("/auth/login", {
         method: "POST",
         body: JSON.stringify({ email: authForm.email, password: authForm.password })
@@ -107,6 +131,9 @@ export default function App() {
   };
 
   const handleLogout = () => {
+    if (isFirebaseConfigured && auth) {
+      signOut(auth).catch(() => {});
+    }
     setToken(null);
     setUser(null);
     localStorage.removeItem("token");
