@@ -1,7 +1,7 @@
 {
   "info": {
     "name": "Hostel Room Allocation API",
-    "description": "Postman Collection for Hostel Room Allocation System",
+    "description": "Postman Collection for Hostel Room Allocation System - Sequential Test Flow",
     "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "variable": [
@@ -21,7 +21,37 @@
       "type": "string"
     },
     {
+      "key": "student2Token",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "studentEmail",
+      "value": "student_test@hostel.com",
+      "type": "string"
+    },
+    {
+      "key": "wardenEmail",
+      "value": "warden_test@hostel.com",
+      "type": "string"
+    },
+    {
+      "key": "student2Email",
+      "value": "student2_test@hostel.com",
+      "type": "string"
+    },
+    {
+      "key": "roomNumber",
+      "value": "101",
+      "type": "string"
+    },
+    {
       "key": "roomId",
+      "value": "",
+      "type": "string"
+    },
+    {
+      "key": "room2Id",
       "value": "",
       "type": "string"
     },
@@ -29,339 +59,690 @@
       "key": "allocationId",
       "value": "",
       "type": "string"
+    },
+    {
+      "key": "allocation2Id",
+      "value": "",
+      "type": "string"
     }
   ],
   "item": [
     {
-      "name": "AUTH",
-      "item": [
+      "name": "1. Register Student",
+      "event": [
         {
-          "name": "1. Register Student",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+          "listen": "prerequest",
+          "script": {
+            "exec": [
+              "const ts = Date.now();",
+              "pm.collectionVariables.set(\"studentEmail\", \"student_\" + ts + \"@test.com\");",
+              "pm.collectionVariables.set(\"wardenEmail\", \"warden_\" + ts + \"@test.com\");",
+              "pm.collectionVariables.set(\"student2Email\", \"student2_\" + ts + \"@test.com\");",
+              "pm.collectionVariables.set(\"roomNumber\", \"R\" + ts.toString().slice(-4));"
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Alice Student\",\n  \"email\": \"alice@student.com\",\n  \"password\": \"password123\",\n  \"role\": \"student\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
-            }
+            "type": "text/javascript"
           }
         },
         {
-          "name": "2. Register Warden",
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});"
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"name\": \"Bob Warden\",\n  \"email\": \"bob@warden.com\",\n  \"password\": \"password123\",\n  \"role\": \"warden\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/register",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "register"]
-            }
-          }
-        },
-        {
-          "name": "3. Login Student",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.token) {",
-                  "    pm.collectionVariables.set(\"studentToken\", res.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"alice@student.com\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
-            }
-          }
-        },
-        {
-          "name": "4. Login Warden",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res.token) {",
-                  "    pm.collectionVariables.set(\"wardenToken\", res.token);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"email\": \"bob@warden.com\",\n  \"password\": \"password123\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/auth/login",
-              "host": ["{{baseUrl}}"],
-              "path": ["auth", "login"]
-            }
+            "type": "text/javascript"
           }
         }
-      ]
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Alice Student\",\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"password123\",\n  \"role\": \"student\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
     },
     {
-      "name": "ROOMS",
-      "item": [
+      "name": "2. Login Student",
+      "event": [
         {
-          "name": "5. Get Rooms",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{studentToken}}"
-              }
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "    pm.collectionVariables.set(\"studentToken\", res.token);",
+              "}"
             ],
-            "url": {
-              "raw": "{{baseUrl}}/rooms",
-              "host": ["{{baseUrl}}"],
-              "path": ["rooms"]
-            }
-          }
-        },
-        {
-          "name": "6. Create Room",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res._id) {",
-                  "    pm.collectionVariables.set(\"roomId\", res._id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{wardenToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"roomNumber\": \"101\",\n  \"capacity\": 2\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/rooms",
-              "host": ["{{baseUrl}}"],
-              "path": ["rooms"]
-            }
-          }
-        },
-        {
-          "name": "7. Update Room",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{wardenToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"capacity\": 3\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/rooms/{{roomId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["rooms", "{{roomId}}"]
-            }
-          }
-        },
-        {
-          "name": "8. Delete Room",
-          "request": {
-            "method": "DELETE",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{wardenToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/rooms/{{roomId}}",
-              "host": ["{{baseUrl}}"],
-              "path": ["rooms", "{{roomId}}"]
-            }
+            "type": "text/javascript"
           }
         }
-      ]
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{studentEmail}}\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
     },
     {
-      "name": "ALLOCATIONS",
-      "item": [
+      "name": "3. Register Warden",
+      "event": [
         {
-          "name": "9. Create Allocation",
-          "event": [
-            {
-              "listen": "test",
-              "script": {
-                "exec": [
-                  "const res = pm.response.json();",
-                  "if (res._id) {",
-                  "    pm.collectionVariables.set(\"allocationId\", res._id);",
-                  "}"
-                ],
-                "type": "text/javascript"
-              }
-            }
-          ],
-          "request": {
-            "method": "POST",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{studentToken}}"
-              }
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});"
             ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"roomId\": \"{{roomId}}\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/allocations",
-              "host": ["{{baseUrl}}"],
-              "path": ["allocations"]
-            }
-          }
-        },
-        {
-          "name": "10. Get Allocations",
-          "request": {
-            "method": "GET",
-            "header": [
-              {
-                "key": "Authorization",
-                "value": "Bearer {{wardenToken}}"
-              }
-            ],
-            "url": {
-              "raw": "{{baseUrl}}/allocations",
-              "host": ["{{baseUrl}}"],
-              "path": ["allocations"]
-            }
-          }
-        },
-        {
-          "name": "11. Approve Allocation",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{wardenToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"approved\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/allocations/{{allocationId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["allocations", "{{allocationId}}", "status"]
-            }
-          }
-        },
-        {
-          "name": "12. Reject Allocation",
-          "request": {
-            "method": "PATCH",
-            "header": [
-              {
-                "key": "Content-Type",
-                "value": "application/json"
-              },
-              {
-                "key": "Authorization",
-                "value": "Bearer {{wardenToken}}"
-              }
-            ],
-            "body": {
-              "mode": "raw",
-              "raw": "{\n  \"status\": \"rejected\"\n}"
-            },
-            "url": {
-              "raw": "{{baseUrl}}/allocations/{{allocationId}}/status",
-              "host": ["{{baseUrl}}"],
-              "path": ["allocations", "{{allocationId}}", "status"]
-            }
+            "type": "text/javascript"
           }
         }
-      ]
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Bob Warden\",\n  \"email\": \"{{wardenEmail}}\",\n  \"password\": \"password123\",\n  \"role\": \"warden\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "4. Login Warden",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "    pm.collectionVariables.set(\"wardenToken\", res.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{wardenEmail}}\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "5. Get Rooms",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{studentToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/rooms",
+          "host": ["{{baseUrl}}"],
+          "path": ["rooms"]
+        }
+      }
+    },
+    {
+      "name": "6. Create Room",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const res = pm.response.json();",
+              "if (res._id) {",
+              "    pm.collectionVariables.set(\"roomId\", res._id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{wardenToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomNumber\": \"{{roomNumber}}\",\n  \"capacity\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rooms",
+          "host": ["{{baseUrl}}"],
+          "path": ["rooms"]
+        }
+      }
+    },
+    {
+      "name": "7. Update Room",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{wardenToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"capacity\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rooms/{{roomId}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["rooms", "{{roomId}}"]
+        }
+      }
+    },
+    {
+      "name": "8. Create Allocation Request",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const res = pm.response.json();",
+              "if (res._id) {",
+              "    pm.collectionVariables.set(\"allocationId\", res._id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{studentToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomId\": \"{{roomId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/allocations",
+          "host": ["{{baseUrl}}"],
+          "path": ["allocations"]
+        }
+      }
+    },
+    {
+      "name": "9. Get Allocations",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{wardenToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/allocations",
+          "host": ["{{baseUrl}}"],
+          "path": ["allocations"]
+        }
+      }
+    },
+    {
+      "name": "10. Approve Allocation as Warden",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{wardenToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"approved\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/allocations/{{allocationId}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["allocations", "{{allocationId}}", "status"]
+        }
+      }
+    },
+    {
+      "name": "11. Register Student 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"name\": \"Student Two\",\n  \"email\": \"{{student2Email}}\",\n  \"password\": \"password123\",\n  \"role\": \"student\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/register",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "register"]
+        }
+      }
+    },
+    {
+      "name": "12. Login Student 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});",
+              "const res = pm.response.json();",
+              "if (res.token) {",
+              "    pm.collectionVariables.set(\"student2Token\", res.token);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{student2Email}}\",\n  \"password\": \"password123\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/auth/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["auth", "login"]
+        }
+      }
+    },
+    {
+      "name": "13. Create Room 2 (for Rejection & Delete tests)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const res = pm.response.json();",
+              "if (res._id) {",
+              "    pm.collectionVariables.set(\"room2Id\", res._id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{wardenToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomNumber\": \"{{roomNumber}}_B\",\n  \"capacity\": 2\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rooms",
+          "host": ["{{baseUrl}}"],
+          "path": ["rooms"]
+        }
+      }
+    },
+    {
+      "name": "14. Student 2 Requests Room 2",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 201 Created\", function () {",
+              "    pm.response.to.have.status(201);",
+              "});",
+              "const res = pm.response.json();",
+              "if (res._id) {",
+              "    pm.collectionVariables.set(\"allocation2Id\", res._id);",
+              "}"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{student2Token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomId\": \"{{room2Id}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/allocations",
+          "host": ["{{baseUrl}}"],
+          "path": ["allocations"]
+        }
+      }
+    },
+    {
+      "name": "15. Warden Rejects Allocation (Test Rejection)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "PATCH",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{wardenToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"status\": \"rejected\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/allocations/{{allocation2Id}}/status",
+          "host": ["{{baseUrl}}"],
+          "path": ["allocations", "{{allocation2Id}}", "status"]
+        }
+      }
+    },
+    {
+      "name": "16. Test Full-Room Capacity Block",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 400 Room is full\", function () {",
+              "    pm.response.to.have.status(400);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{student2Token}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomId\": \"{{roomId}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/allocations",
+          "host": ["{{baseUrl}}"],
+          "path": ["allocations"]
+        }
+      }
+    },
+    {
+      "name": "17. Test Authorization Block (Student tries to create room)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 403 Forbidden for student creating room\", function () {",
+              "    pm.response.to.have.status(403);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          },
+          {
+            "key": "Authorization",
+            "value": "Bearer {{studentToken}}"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"roomNumber\": \"UNAUTHORIZED\",\n  \"capacity\": 1\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/rooms",
+          "host": ["{{baseUrl}}"],
+          "path": ["rooms"]
+        }
+      }
+    },
+    {
+      "name": "18. Delete Room (Empty Room 2 after tests completed)",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test(\"Status code is 200 OK\", function () {",
+              "    pm.response.to.have.status(200);",
+              "});"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ],
+      "request": {
+        "method": "DELETE",
+        "header": [
+          {
+            "key": "Authorization",
+            "value": "Bearer {{wardenToken}}"
+          }
+        ],
+        "url": {
+          "raw": "{{baseUrl}}/rooms/{{room2Id}}",
+          "host": ["{{baseUrl}}"],
+          "path": ["rooms", "{{room2Id}}"]
+        }
+      }
     }
   ]
 }
