@@ -1,6 +1,7 @@
 require("dotenv").config();
 
 const express = require("express");
+const path = require("path");
 const requestLogger = require("./middleware/logger");
 const authRouter = require("./routes/authRoutes");
 const salonRouter = require("./routes/salonRoutes");
@@ -11,8 +12,12 @@ const serverPort = process.env.PORT || 4000;
 
 app.use(express.json());
 app.use(requestLogger);
+app.use(express.static(path.join(__dirname, "public")));
 
-app.get("/", (req, res) => {
+app.get("/", (req, res, next) => {
+  if (req.headers.accept && req.headers.accept.includes("text/html")) {
+    return res.sendFile(path.join(__dirname, "public", "index.html"));
+  }
   res.status(200).json({ message: "Welcome to Salon APIs" });
 });
 

@@ -112,6 +112,10 @@ const init = () => {
     } catch (e) {}
   }
   db = new MockDB();
+  const booksCol = db.collection('books');
+  booksCol.add({ title: 'Clean Code', author: 'Robert C. Martin', isbn: '9780132350884', category: 'Programming', quantity: 5, availableQuantity: 5, isAvailable: true });
+  booksCol.add({ title: 'The Pragmatic Programmer', author: 'Andy Hunt', isbn: '9780201616224', category: 'Software Engineering', quantity: 3, availableQuantity: 3, isAvailable: true });
+  booksCol.add({ title: 'JavaScript: The Good Parts', author: 'Douglas Crockford', isbn: '9780596517748', category: 'Web Development', quantity: 4, availableQuantity: 4, isAvailable: true });
 };
 
 init();

@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Management API Dashboard</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #f8fafc; color: #1e293b; padding: 24px; line-height: 1.5; }
+    .container { max-width: 960px; margin: 0 auto; }
+    header { background: #ffffff; padding: 20px 24px; border: 1px solid #e2e8f0; border-radius: 8px; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; }
+    h1 { font-size: 22px; font-weight: 600; color: #0f172a; }
+    .badge { background: #dbeafe; color: #1d4ed8; padding: 4px 10px; border-radius: 9999px; font-size: 13px; font-weight: 500; }
+    .student { font-size: 13px; color: #64748b; margin-top: 4px; }
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 768px) { .grid { grid-template-columns: 1fr; } }
+    .card { background: #ffffff; padding: 20px; border: 1px solid #e2e8f0; border-radius: 8px; }
+    .card h2 { font-size: 16px; font-weight: 600; margin-bottom: 12px; color: #334155; }
+    label { display: block; font-size: 13px; font-weight: 500; margin-bottom: 4px; color: #475569; }
+    input, select { width: 100%; padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; margin-bottom: 12px; background: #fff; }
+    button { background: #2563eb; color: #ffffff; border: none; padding: 9px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    button:hover { background: #1d4ed8; }
+    .btn-danger { background: #ef4444; padding: 4px 10px; font-size: 12px; }
+    .btn-danger:hover { background: #dc2626; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #f1f5f9; }
+    th { background: #f8fafc; font-weight: 600; color: #475569; }
+    .status-box { margin-top: 12px; padding: 10px 14px; border-radius: 6px; font-size: 13px; display: none; }
+    .status-success { background: #ecfdf5; color: #047857; border: 1px solid #a7f3d0; }
+    .status-error { background: #fef2f2; color: #b91c1c; border: 1px solid #fecaca; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Hotel Management System</h1>
+        <div class="student">Samarth Navale (150096725148) • Cohort: Sam Altman</div>
+      </div>
+      <span class="badge">REST API Online</span>
+    </header>
+
+    <div class="grid">
+      <div class="card">
+        <h2>Add New Hotel</h2>
+        <form id="addHotelForm">
+          <label>Hotel Name</label>
+          <input type="text" id="hotelName" placeholder="e.g. Grand Resort" required>
+          <label>Location</label>
+          <input type="text" id="hotelLocation" placeholder="e.g. Mumbai" required>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <div>
+              <label>Rating (1-5)</label>
+              <select id="hotelRating">
+                <option value="5">5 Stars</option>
+                <option value="4">4 Stars</option>
+                <option value="3">3 Stars</option>
+                <option value="2">2 Stars</option>
+                <option value="1">1 Star</option>
+              </select>
+            </div>
+            <div>
+              <label>Price / Night (₹)</label>
+              <input type="number" id="hotelPrice" placeholder="5000" required>
+            </div>
+          </div>
+          <button type="submit">Add Hotel</button>
+        </form>
+        <div id="addStatus" class="status-box"></div>
+      </div>
+
+      <div class="card">
+        <h2>User Account (Register / Login)</h2>
+        <form id="authForm">
+          <label>Username</label>
+          <input type="text" id="authUsername" placeholder="e.g. samarth" required>
+          <label>Email</label>
+          <input type="email" id="authEmail" placeholder="samarth@example.com">
+          <label>Password</label>
+          <input type="password" id="authPassword" placeholder="••••••••" required>
+          <div style="display: flex; gap: 10px;">
+            <button type="button" id="registerBtn">Register</button>
+            <button type="button" id="loginBtn" style="background:#475569;">Login</button>
+          </div>
+        </form>
+        <div id="authStatus" class="status-box"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px;">
+        <h2>Hotel Directory</h2>
+        <div style="display: flex; gap: 10px; align-items: center;">
+          <label style="margin: 0; font-size: 13px;">Filter Rating:</label>
+          <select id="filterRating" style="width: auto; margin: 0; padding: 4px 8px;">
+            <option value="">All</option>
+            <option value="5">5 Stars</option>
+            <option value="4">4 Stars</option>
+            <option value="3">3 Stars</option>
+          </select>
+        </div>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Location</th>
+            <th>Rating</th>
+            <th>Price/Night</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody id="hotelsTableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script>
+    const loadHotels = async () => {
+      const rating = document.getElementById('filterRating').value;
+      const url = rating ? `/hotels?rating=${rating}` : '/hotels';
+      const res = await fetch(url);
+      const data = await res.json();
+      const tbody = document.getElementById('hotelsTableBody');
+      tbody.innerHTML = '';
+      if (Array.isArray(data) && data.length > 0) {
+        data.forEach(h => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td>#${h.id}</td>
+            <td><strong>${h.name}</strong></td>
+            <td>${h.location}</td>
+            <td>⭐ ${h.rating} / 5</td>
+            <td>₹${Number(h.pricePerNight).toLocaleString()}</td>
+            <td><button class="btn-danger" onclick="deleteHotel(${h.id})">Delete</button></td>
+          `;
+          tbody.appendChild(tr);
+        });
+      } else {
+        tbody.innerHTML = '<tr><td colspan="6" style="text-align:center; color:#94a3b8;">No hotels found</td></tr>';
+      }
+    };
+
+    const deleteHotel = async (id) => {
+      if (!confirm(`Delete hotel #${id}?`)) return;
+      await fetch(`/hotels/${id}`, { method: 'DELETE' });
+      loadHotels();
+    };
+
+    document.getElementById('filterRating').addEventListener('change', loadHotels);
+
+    document.getElementById('addHotelForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = document.getElementById('addStatus');
+      const body = {
+        name: document.getElementById('hotelName').value,
+        location: document.getElementById('hotelLocation').value,
+        rating: Number(document.getElementById('hotelRating').value),
+        pricePerNight: Number(document.getElementById('hotelPrice').value)
+      };
+      try {
+        const res = await fetch('/hotels', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body)
+        });
+        const json = await res.json();
+        if (res.ok) {
+          status.className = 'status-box status-success';
+          status.textContent = 'Hotel added successfully!';
+          status.style.display = 'block';
+          document.getElementById('addHotelForm').reset();
+          loadHotels();
+        } else {
+          status.className = 'status-box status-error';
+          status.textContent = json.message || 'Error adding hotel';
+          status.style.display = 'block';
+        }
+      } catch (err) {
+        status.className = 'status-box status-error';
+        status.textContent = 'Failed to connect to API';
+        status.style.display = 'block';
+      }
+    });
+
+    document.getElementById('registerBtn').addEventListener('click', async () => {
+      const status = document.getElementById('authStatus');
+      const body = {
+        username: document.getElementById('authUsername').value,
+        email: document.getElementById('authEmail').value,
+        password: document.getElementById('authPassword').value
+      };
+      const res = await fetch('/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const json = await res.json();
+      status.className = res.ok ? 'status-box status-success' : 'status-box status-error';
+      status.textContent = json.message || (res.ok ? 'Registered!' : 'Registration failed');
+      status.style.display = 'block';
+    });
+
+    document.getElementById('loginBtn').addEventListener('click', async () => {
+      const status = document.getElementById('authStatus');
+      const body = {
+        username: document.getElementById('authUsername').value,
+        password: document.getElementById('authPassword').value
+      };
+      const res = await fetch('/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body)
+      });
+      const json = await res.json();
+      status.className = res.ok ? 'status-box status-success' : 'status-box status-error';
+      status.textContent = json.message || (res.ok ? 'Login successful!' : 'Invalid credentials');
+      status.style.display = 'block';
+    });
+
+    loadHotels();
+  </script>
+</body>
+</html>

@@ -1,0 +1,383 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Salon & Service Management - Samarth Navale</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background-color: #f8fafc; color: #1e293b; padding: 24px 16px; }
+    .container { max-width: 1050px; margin: 0 auto; }
+    header { background: #ffffff; padding: 20px 24px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 12px; }
+    h1 { font-size: 22px; color: #0f172a; }
+    .subtitle { color: #64748b; font-size: 14px; margin-top: 4px; }
+    .badge { display: inline-block; padding: 4px 10px; background: #e0e7ff; color: #3730a3; border-radius: 4px; font-size: 12px; font-weight: 600; }
+    .card { background: #ffffff; padding: 20px 24px; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 20px; }
+    h2 { font-size: 17px; margin-bottom: 16px; color: #334155; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    label { font-size: 13px; font-weight: 500; color: #475569; }
+    input, select { padding: 8px 12px; border: 1px solid #cbd5e1; border-radius: 6px; font-size: 14px; outline: none; }
+    input:focus { border-color: #3b82f6; }
+    .btn { background: #2563eb; color: #ffffff; border: none; padding: 8px 16px; border-radius: 6px; font-size: 14px; font-weight: 500; cursor: pointer; }
+    .btn:hover { background: #1d4ed8; }
+    .btn-secondary { background: #64748b; }
+    .btn-secondary:hover { background: #475569; }
+    .btn-success { background: #10b981; }
+    .btn-success:hover { background: #059669; }
+    .btn-danger { background: #ef4444; padding: 4px 10px; font-size: 12px; }
+    .btn-danger:hover { background: #dc2626; }
+    .btn-info { background: #0284c7; padding: 4px 10px; font-size: 12px; }
+    .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+    th, td { text-align: left; padding: 10px 12px; border-bottom: 1px solid #e2e8f0; }
+    th { background: #f8fafc; color: #475569; font-weight: 600; }
+    tr:hover { background: #f8fafc; }
+    .rating { color: #f59e0b; font-weight: 600; }
+    .msg { padding: 10px 14px; border-radius: 6px; margin-bottom: 14px; font-size: 14px; display: none; }
+    .msg-success { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+    .msg-error { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+    .auth-banner { display: flex; justify-content: space-between; align-items: center; background: #f1f5f9; padding: 10px 16px; border-radius: 6px; margin-bottom: 16px; font-size: 13px; }
+    .modal { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); align-items: center; justify-content: center; padding: 16px; z-index: 1000; }
+    .modal-content { background: #fff; width: 100%; max-width: 600px; border-radius: 8px; padding: 24px; max-height: 90vh; overflow-y: auto; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div>
+        <h1>Salon & Grooming Services Portal</h1>
+        <div class="subtitle">Assignment 4 • Supabase / PostgreSQL REST API with JWT Auth</div>
+      </div>
+      <div>
+        <span class="badge">Samarth Navale (150096725148)</span>
+      </div>
+    </header>
+
+    <div id="alertMsg" class="msg"></div>
+
+    <div class="card">
+      <div class="auth-banner">
+        <div id="authStatusText">Status: <strong>Guest (Read Only)</strong></div>
+        <div style="display: flex; gap: 8px;">
+          <input type="text" id="authEmail" placeholder="Email" style="width: 130px; font-size: 12px; padding: 4px 8px;">
+          <input type="password" id="authPass" placeholder="Password" style="width: 110px; font-size: 12px; padding: 4px 8px;">
+          <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="handleLogin()">Login</button>
+          <button class="btn btn-secondary" style="padding: 4px 10px; font-size: 12px;" onclick="handleRegister()">Register</button>
+        </div>
+      </div>
+
+      <h2>Add New Salon</h2>
+      <form id="addSalonForm">
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="sName">Salon Name</label>
+            <input type="text" id="sName" placeholder="e.g. Elegance Hair Lounge" required>
+          </div>
+          <div class="form-group">
+            <label for="sCity">City</label>
+            <input type="text" id="sCity" placeholder="e.g. Delhi" required>
+          </div>
+          <div class="form-group">
+            <label for="sAddress">Address</label>
+            <input type="text" id="sAddress" placeholder="e.g. Connaught Place" required>
+          </div>
+          <div class="form-group">
+            <label for="sRating">Rating (0-5)</label>
+            <input type="number" id="sRating" step="0.1" min="0" max="5" placeholder="4.8" required>
+          </div>
+        </div>
+        <button type="submit" class="btn btn-success">+ Add Salon (Requires Auth)</button>
+      </form>
+    </div>
+
+    <div class="card">
+      <h2>Salon Directory</h2>
+      <div class="controls">
+        <input type="text" id="searchInput" placeholder="Search by name or city..." style="width: 250px;">
+        <button class="btn btn-secondary" onclick="loadSalons('/salons')">All Salons</button>
+        <button class="btn" onclick="loadSalons('/salons/top')">Top Rated</button>
+      </div>
+
+      <div style="overflow-x: auto;">
+        <table>
+          <thead>
+            <tr>
+              <th>Salon Name</th>
+              <th>City</th>
+              <th>Address</th>
+              <th>Rating</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="salonTableBody">
+            <tr><td colspan="5" style="text-align: center; color: #64748b;">Loading salons...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Services Modal -->
+  <div id="serviceModal" class="modal">
+    <div class="modal-content">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+        <h2 id="modalSalonName" style="border: none; margin: 0;">Salon Services</h2>
+        <button onclick="closeServiceModal()" style="background: none; border: none; font-size: 20px; cursor: pointer;">&times;</button>
+      </div>
+
+      <div style="background: #f1f5f9; padding: 12px; border-radius: 6px; margin-bottom: 16px;">
+        <h4 style="font-size: 13px; margin-bottom: 8px;">Add Service to Salon</h4>
+        <form id="addServiceForm" style="display: grid; grid-template-columns: 2fr 1fr 1fr auto; gap: 8px;">
+          <input type="text" id="srvName" placeholder="Service (e.g. Haircut)" required>
+          <input type="number" id="srvPrice" placeholder="Price" min="0" required>
+          <input type="number" id="srvDuration" placeholder="Mins" min="5" required>
+          <button type="submit" class="btn btn-success" style="padding: 6px 12px; font-size: 13px;">+ Add</button>
+        </form>
+      </div>
+
+      <div id="serviceListContainer">
+        <p style="color: #64748b; font-size: 13px;">Loading services...</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let authToken = localStorage.getItem('salon_token') || '';
+    let currentSalonId = null;
+    let allSalons = [];
+
+    function updateAuthStatus() {
+      const el = document.getElementById('authStatusText');
+      if (authToken) {
+        el.innerHTML = 'Status: <strong style="color: #166534;">Authenticated</strong> <a href="#" onclick="logout()" style="margin-left: 8px; color: #dc2626; font-size: 12px;">Logout</a>';
+      } else {
+        el.innerHTML = 'Status: <strong>Guest (Read Only)</strong>';
+      }
+    }
+    updateAuthStatus();
+
+    function logout() {
+      authToken = '';
+      localStorage.removeItem('salon_token');
+      updateAuthStatus();
+      showAlert('Logged out.');
+    }
+
+    function showAlert(text, isError = false) {
+      const el = document.getElementById('alertMsg');
+      el.textContent = text;
+      el.className = isError ? 'msg msg-error' : 'msg msg-success';
+      el.style.display = 'block';
+      setTimeout(() => el.style.display = 'none', 4000);
+    }
+
+    async function handleRegister() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPass').value.trim();
+      if (!email || !password) return showAlert('Enter email and password', true);
+
+      try {
+        const res = await fetch('/register', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password, name: email.split('@')[0] })
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAlert('Registration successful! Please login.');
+        } else {
+          showAlert(data.message || 'Registration failed', true);
+        }
+      } catch (e) { showAlert('Network error', true); }
+    }
+
+    async function handleLogin() {
+      const email = document.getElementById('authEmail').value.trim();
+      const password = document.getElementById('authPass').value.trim();
+      if (!email || !password) return showAlert('Enter email and password', true);
+
+      try {
+        const res = await fetch('/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (res.ok && data.token) {
+          authToken = data.token;
+          localStorage.setItem('salon_token', authToken);
+          updateAuthStatus();
+          showAlert('Logged in successfully!');
+        } else {
+          showAlert(data.message || 'Login failed', true);
+        }
+      } catch (e) { showAlert('Network error', true); }
+    }
+
+    async function loadSalons(endpoint = '/salons') {
+      try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        allSalons = Array.isArray(data) ? data : [];
+        renderSalons(allSalons);
+      } catch (err) {
+        document.getElementById('salonTableBody').innerHTML = '<tr><td colspan="5" style="text-align: center; color: #ef4444;">Failed to load data.</td></tr>';
+      }
+    }
+
+    function renderSalons(list) {
+      const tbody = document.getElementById('salonTableBody');
+      if (!list || list.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="5" style="text-align: center; color: #64748b;">No salons found.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = list.map(s => `
+        <tr>
+          <td><strong>${escapeHtml(s.name || '')}</strong></td>
+          <td>${escapeHtml(s.city || '')}</td>
+          <td>${escapeHtml(s.address || '')}</td>
+          <td><span class="rating">★ ${s.rating ?? '-'}</span></td>
+          <td>
+            <button class="btn btn-info" onclick="viewServices('${s.id}', '${escapeHtml(s.name || '')}')">Services</button>
+            <button class="btn btn-danger" onclick="deleteSalon('${s.id}')">Delete</button>
+          </td>
+        </tr>
+      `).join('');
+    }
+
+    function escapeHtml(str) {
+      return (str || '').replace(/[&<>"']/g, m => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#039;' })[m]);
+    }
+
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      const q = e.target.value.toLowerCase();
+      const filtered = allSalons.filter(s => 
+        (s.name && s.name.toLowerCase().includes(q)) || 
+        (s.city && s.city.toLowerCase().includes(q))
+      );
+      renderSalons(filtered);
+    });
+
+    document.getElementById('addSalonForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!authToken) return showAlert('Login required to add salon.', true);
+
+      const payload = {
+        name: document.getElementById('sName').value.trim(),
+        city: document.getElementById('sCity').value.trim(),
+        address: document.getElementById('sAddress').value.trim(),
+        rating: Number(document.getElementById('sRating').value)
+      };
+
+      try {
+        const res = await fetch('/salons', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAlert('Salon added successfully!');
+          document.getElementById('addSalonForm').reset();
+          loadSalons();
+        } else {
+          showAlert(data.message || 'Error adding salon', true);
+        }
+      } catch (e) { showAlert('Network error', true); }
+    });
+
+    async function deleteSalon(id) {
+      if (!authToken) return showAlert('Login required to delete.', true);
+      if (!confirm('Are you sure you want to delete this salon?')) return;
+
+      try {
+        const res = await fetch(`/salons/${id}`, {
+          method: 'DELETE',
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAlert('Salon deleted successfully');
+          loadSalons();
+        } else {
+          showAlert(data.message || 'Failed to delete', true);
+        }
+      } catch (e) { showAlert('Network error', true); }
+    }
+
+    async function viewServices(id, name) {
+      currentSalonId = id;
+      document.getElementById('modalSalonName').textContent = `${name} - Services`;
+      document.getElementById('serviceModal').style.display = 'flex';
+      loadServices(id);
+    }
+
+    function closeServiceModal() {
+      document.getElementById('serviceModal').style.display = 'none';
+      currentSalonId = null;
+    }
+
+    async function loadServices(salonId) {
+      const container = document.getElementById('serviceListContainer');
+      container.innerHTML = '<p style="color: #64748b; font-size: 13px;">Loading services...</p>';
+      try {
+        const res = await fetch(`/salons/${salonId}/services`);
+        const items = await res.json();
+        if (!Array.isArray(items) || items.length === 0) {
+          container.innerHTML = '<p style="color: #64748b; font-size: 13px;">No services listed yet.</p>';
+          return;
+        }
+        container.innerHTML = `
+          <table style="font-size: 13px;">
+            <thead><tr><th>Service Name</th><th>Price</th><th>Duration</th><th>Available</th></tr></thead>
+            <tbody>
+              ${items.map(m => `
+                <tr>
+                  <td>${escapeHtml(m.service_name || m.name || '')}</td>
+                  <td>₹${m.price}</td>
+                  <td>${m.duration || '-'} mins</td>
+                  <td>${m.is_available ? '<span style="color:#16a34a;">Yes</span>' : '<span style="color:#dc2626;">No</span>'}</td>
+                </tr>
+              `).join('')}
+            </tbody>
+          </table>
+        `;
+      } catch (e) {
+        container.innerHTML = '<p style="color: #ef4444; font-size: 13px;">Error loading services.</p>';
+      }
+    }
+
+    document.getElementById('addServiceForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!authToken) return showAlert('Login required to add service', true);
+      if (!currentSalonId) return;
+
+      const payload = {
+        serviceName: document.getElementById('srvName').value.trim(),
+        price: Number(document.getElementById('srvPrice').value),
+        duration: Number(document.getElementById('srvDuration').value),
+        isAvailable: true
+      };
+
+      try {
+        const res = await fetch(`/salons/${currentSalonId}/services`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${authToken}` },
+          body: JSON.stringify(payload)
+        });
+        const data = await res.json();
+        if (res.ok) {
+          showAlert('Service added successfully!');
+          document.getElementById('addServiceForm').reset();
+          loadServices(currentSalonId);
+        } else {
+          showAlert(data.message || 'Error adding service', true);
+        }
+      } catch (e) { showAlert('Network error', true); }
+    });
+
+    loadSalons();
+  </script>
+</body>
+</html>

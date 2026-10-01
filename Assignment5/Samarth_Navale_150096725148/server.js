@@ -5,11 +5,16 @@ const dotenv = require("dotenv");
 const mongoose = require("mongoose");
 const { Server } = require("socket.io");
 
+const path = require("path");
 dotenv.config();
 
 const app = express();
 app.use(cors());
-app.use(express.static("public"));
+app.use(express.static(path.join(__dirname, "public")));
+
+app.get("/", (req, res) => {
+  res.sendFile(path.join(__dirname, "public", "index.html"));
+});
 
 const server = http.createServer(app);
 const io = new Server(server);

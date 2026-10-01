@@ -6,12 +6,14 @@ const bcrypt = require("bcryptjs");
 const cors = require("cors");
 require("dotenv").config();
 
+const path = require("path");
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Logger Middleware
 app.use((req, res, next) => {
@@ -20,7 +22,11 @@ app.use((req, res, next) => {
 });
 
 let users = [];
-let hotels = [];
+let hotels = [
+    { id: 1, name: "Grand Hyatt", location: "Mumbai", rating: 5, pricePerNight: 12000 },
+    { id: 2, name: "Taj Mahal Palace", location: "Mumbai", rating: 5, pricePerNight: 25000 },
+    { id: 3, name: "Marriott Resort", location: "Goa", rating: 4, pricePerNight: 8500 }
+];
 
 // Passport Strategy Configuration
 passport.use(
@@ -61,6 +67,9 @@ app.use(passport.session());
 
 // Welcome Route
 app.get("/", (req, res) => {
+    if (req.headers.accept && req.headers.accept.includes("text/html")) {
+        return res.sendFile(path.join(__dirname, "public", "index.html"));
+    }
     res.json({
         message: "Welcome to Hotel APIs",
         status: "Online",
