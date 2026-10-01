@@ -66,7 +66,10 @@ casestudy113/
 |---|---|---|---|
 | `GET` | `/api` | Public | Health / Welcome check |
 | `POST` | `/api/auth/register` | Public | Register new student or warden |
-| `POST` | `/api/auth/login` | Public | Login and receive JWT token |
+| `POST` | `/api/auth/login` | Public | Login with email/password and receive JWT |
+| `POST` | `/api/auth/google` | Public | Google Sign-In & auto-sync to MongoDB Atlas |
+| `GET` | `/api/auth/me` | Auth | Get authenticated user profile from MongoDB |
+| `PATCH` | `/api/auth/profile` | Auth | Update name and switch role directly in MongoDB |
 | `GET` | `/api/rooms` | Auth | View all rooms and bed availability |
 | `POST` | `/api/rooms` | Warden | Add a new room with capacity |
 | `PATCH` | `/api/rooms/:id` | Warden | Update room number or capacity |
@@ -74,6 +77,14 @@ casestudy113/
 | `POST` | `/api/allocations` | Student | Request room allocation (pending) |
 | `GET` | `/api/allocations` | Auth | View allocations (all for warden, own for student) |
 | `PATCH` | `/api/allocations/:id/status` | Warden | Approve or reject pending request |
+
+---
+
+## Live Cloud Deployments
+
+- **Frontend (Vercel)**: [https://casestudy113.vercel.app](https://casestudy113.vercel.app)
+- **Backend (Render)**: [https://casestudy113.onrender.com/api](https://casestudy113.onrender.com/api)
+- **Database (MongoDB Atlas)**: `casestudy113.4uag7mq.mongodb.net`
 
 ---
 
@@ -88,7 +99,7 @@ JWT_SECRET=super_secret_hostel_allocation_jwt_key_2026_samarth
 
 ### Frontend (`frontend/.env`)
 ```env
-VITE_API_URL=http://localhost:5001/api
+VITE_API_URL=https://casestudy113.onrender.com/api
 ```
 
 ---
@@ -116,18 +127,19 @@ Frontend runs on `http://localhost:3000`.
 cd backend
 npm test
 ```
-Runs 36 integration checks verifying authentication, authorization, CRUD, capacity limits, and duplicate protection.
+Runs 40 integration checks verifying authentication, Google Sign-In sync, authorization, CRUD, capacity limits, and duplicate protection.
 
 ---
 
 ## Demonstration Test Flow (Viva Scenario)
 
-1. **Register Warden**: Create a warden account (`role: "warden"`).
-2. **Register Students**: Create Student 1, Student 2, and Student 3 (`role: "student"`).
+1. **Google Sign-In**: Click "Sign in with Google", select or enter your account. User profile is immediately created and synced into MongoDB Atlas.
+2. **Role Switcher**: Click "Edit Profile / Switch Role" to toggle between Student and Warden; updates persist directly to MongoDB Atlas.
 3. **Warden Adds Room**: Room 101 with `capacity = 2`. `occupiedCount` starts at `0`.
 4. **Student 1 Requests Room 101**: Allocation request created with status `pending`. (`occupiedCount` remains `0`).
 5. **Warden Approves Student 1**: Allocation status changes to `approved`, and `occupiedCount` increases to `1`.
 6. **Student 2 Requests Room 101**: Request created with status `pending`.
 7. **Warden Approves Student 2**: Allocation approved, and `occupiedCount` increases to `2` (Room is now FULL).
 8. **Student 3 Requests Room 101**: Backend rejects request with `400 Bad Request` and message: `"Room is full"`.
-9. **Capacity Validation Check**: Warden cannot approve beyond capacity; `occupiedCount` safely stays at `2`.
+9. **Capacity Validation Check**: Warden approval is blocked if room is full; `occupiedCount` safely stays at `2`.
+
