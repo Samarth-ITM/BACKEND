@@ -2,6 +2,7 @@ import { Router, Request, Response } from "express";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { Student } from "../models/Student";
+import { authenticate, AuthRequest } from "../middleware/auth";
 
 const router = Router();
 
@@ -25,7 +26,8 @@ router.post("/register", async (req: Request, res: Response) => {
       name,
       email,
       password: hashedPassword,
-      role: userRole
+      role: userRole,
+      authProvider: "local"
     });
 
     return res.status(201).json({
@@ -70,4 +72,125 @@ router.post("/login", async (req: Request, res: Response) => {
   }
 });
 
+// Google Sign-In: Syncs user into MongoDB Atlas and returns JWT session
+router.post("/google", async (req: Request, res: Response) => {
+  try {
+    const { name, email, role, avatar, googleId } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ message: "Email is required for Google Sign-In" });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    let user = await Student.findOne({ email: normalizedEmail });
+
+    if (user) {
+      if (name && !user.name) user.name = name;
+      if (avatar) user.avatar = avatar;
+      if (googleId) user.googleId = googleId;
+      await user.save();
+    } else {
+      const randomPassword = await bcrypt.hash(
+        Math.random().toString(36).slice(-8) + Date.now().toString(),
+        10
+      );
+      const userRole = role === "warden" ? "warden" : "student";
+
+      user = await Student.create({
+        name: name || normalizedEmail.split("@")[0],
+        email: normalizedEmail,
+        password: randomPassword,
+        role: userRole,
+        authProvider: "google",
+        avatar: avatar || "",
+        googleId: googleId || ""
+      });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || "default_secret",
+      { expiresIn: "1d" }
+    );
+
+    return res.status(200).json({
+      message: "Google authentication successful and saved in MongoDB",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        authProvider: user.authProvider
+      }
+    });
+  } catch (error) {
+    console.error("Google auth error:", error);
+    return res.status(500).json({ message: "Server error during Google authentication" });
+  }
+});
+
+// Get current user details from MongoDB
+router.get("/me", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const user = await Student.findById(req.user?.id).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found in database" });
+    }
+    return res.json({
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        authProvider: user.authProvider
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to fetch user from database" });
+  }
+});
+
+// Update profile / role in MongoDB database
+router.patch("/profile", authenticate, async (req: AuthRequest, res: Response) => {
+  try {
+    const { name, role } = req.body;
+    const updates: any = {};
+    if (name) updates.name = name;
+    if (role && (role === "student" || role === "warden")) updates.role = role;
+
+    const user = await Student.findByIdAndUpdate(req.user?.id, updates, {
+      new: true
+    }).select("-password");
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found in database" });
+    }
+
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET || "default_secret",
+      { expiresIn: "1d" }
+    );
+
+    return res.json({
+      message: "User profile updated successfully in MongoDB",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        avatar: user.avatar,
+        authProvider: user.authProvider
+      }
+    });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to update profile in database" });
+  }
+});
+
 export default router;
+

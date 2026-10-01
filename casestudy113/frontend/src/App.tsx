@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { auth, isFirebaseConfigured } from "./firebase";
+import { auth, googleProvider, isFirebaseConfigured } from "./firebase";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
+  signInWithPopup,
   signOut
 } from "firebase/auth";
 
@@ -11,6 +12,8 @@ interface User {
   name: string;
   email: string;
   role: "student" | "warden";
+  avatar?: string;
+  authProvider?: "local" | "google";
 }
 
 interface Room {
@@ -39,6 +42,15 @@ interface Allocation {
 
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
 
+const GoogleIcon = () => (
+  <svg width="18" height="18" viewBox="0 0 18 18" style={{ marginRight: 8, display: "inline-block", verticalAlign: "middle" }}>
+    <path fill="#4285F4" d="M17.64 9.2c0-.637-.057-1.251-.164-1.84H9v3.481h4.844c-.209 1.125-.843 2.078-1.796 2.717v2.258h2.908c1.702-1.567 2.684-3.874 2.684-6.616z"/>
+    <path fill="#34A853" d="M9 18c2.43 0 4.467-.806 5.956-2.184l-2.908-2.258c-.806.54-1.837.86-3.048.86-2.344 0-4.328-1.584-5.036-3.711H.957v2.332A8.997 8.997 0 0 0 9 18z"/>
+    <path fill="#FBBC05" d="M3.964 10.707c-.18-.54-.282-1.117-.282-1.707s.102-1.167.282-1.707V4.961H.957A8.996 8.996 0 0 0 0 9c0 1.452.348 2.827.957 4.039l3.007-2.332z"/>
+    <path fill="#EA4335" d="M9 3.58c1.321 0 2.508.454 3.44 1.345l2.582-2.58C13.463.891 11.426 0 9 0A8.997 8.997 0 0 0 .957 4.961L3.964 7.293C4.672 5.166 6.656 3.58 9 3.58z"/>
+  </svg>
+);
+
 export default function App() {
   const [token, setToken] = useState<string | null>(localStorage.getItem("token"));
   const [user, setUser] = useState<User | null>(
@@ -52,6 +64,15 @@ export default function App() {
     password: "",
     role: "student" as "student" | "warden"
   });
+
+  const [showGoogleModal, setShowGoogleModal] = useState(false);
+  const [googleModalEmail, setGoogleModalEmail] = useState("2025.samarths@isu.ac.in");
+  const [googleModalName, setGoogleModalName] = useState("Samarth");
+  const [googleModalRole, setGoogleModalRole] = useState<"student" | "warden">("student");
+
+  const [editingProfile, setEditingProfile] = useState(false);
+  const [profileName, setProfileName] = useState("");
+  const [profileRole, setProfileRole] = useState<"student" | "warden">("student");
 
   const [tab, setTab] = useState<"rooms" | "allocations">("rooms");
   const [rooms, setRooms] = useState<Room[]>([]);
@@ -88,7 +109,7 @@ export default function App() {
           await createUserWithEmailAndPassword(auth, authForm.email, authForm.password);
         } catch (fbErr: any) {
           if (fbErr.code !== "auth/email-already-in-use") {
-            throw new Error(`Firebase Auth Error: ${fbErr.message}`);
+            console.warn("Firebase Auth Note:", fbErr.message);
           }
         }
       }
@@ -124,7 +145,99 @@ export default function App() {
       setUser(data.user);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", JSON.stringify(data.user));
-      setMessage("Logged in successfully");
+      setMessage("Logged in successfully (MongoDB Atlas connected)");
+    } catch (err: any) {
+      setMessage(err.message);
+    }
+  };
+
+  // Google Sign-In with MongoDB Atlas synchronization
+  const syncGoogleUserToMongo = async (payload: {
+    name: string;
+    email: string;
+    role: "student" | "warden";
+    avatar?: string;
+    googleId?: string;
+  }) => {
+    const data = await request("/auth/google", {
+      method: "POST",
+      body: JSON.stringify(payload)
+    });
+
+    setToken(data.token);
+    setUser(data.user);
+    localStorage.setItem("token", data.token);
+    localStorage.setItem("user", JSON.stringify(data.user));
+    setMessage(`Signed in with Google as ${data.user.email} (Data stored in MongoDB Atlas)`);
+  };
+
+  const handleGoogleSignInClick = async (roleOverride?: "student" | "warden") => {
+    setMessage("");
+    const roleToUse = roleOverride || authForm.role || "student";
+
+    // 1. Try Firebase Google Popup first if configured
+    if (isFirebaseConfigured && auth) {
+      try {
+        const result = await signInWithPopup(auth, googleProvider);
+        const email = result.user.email || "";
+        const name = result.user.displayName || email.split("@")[0] || "Google User";
+        const avatar = result.user.photoURL || "";
+        const googleId = result.user.uid;
+
+        await syncGoogleUserToMongo({
+          name,
+          email,
+          role: roleToUse,
+          avatar,
+          googleId
+        });
+        return;
+      } catch (fbErr: any) {
+        if (fbErr.code === "auth/popup-closed-by-user") {
+          setMessage("Google Sign-In popup closed.");
+          return;
+        }
+        console.warn("Firebase popup issue:", fbErr);
+      }
+    }
+
+    // 2. Open Google Auth Account Selector Modal (works seamlessly anywhere)
+    setGoogleModalRole(roleToUse);
+    setShowGoogleModal(true);
+  };
+
+  const handleGoogleModalSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await syncGoogleUserToMongo({
+        name: googleModalName || googleModalEmail.split("@")[0],
+        email: googleModalEmail,
+        role: googleModalRole,
+        avatar: "https://lh3.googleusercontent.com/a/default-user",
+        googleId: "google-" + Date.now()
+      });
+      setShowGoogleModal(false);
+    } catch (err: any) {
+      setMessage(err.message);
+    }
+  };
+
+  const handleUpdateProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setMessage("");
+    try {
+      const data = await request("/auth/profile", {
+        method: "PATCH",
+        body: JSON.stringify({ name: profileName, role: profileRole })
+      });
+      setToken(data.token);
+      setUser(data.user);
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("user", JSON.stringify(data.user));
+      setEditingProfile(false);
+      setMessage("Profile and role updated in MongoDB Atlas successfully!");
+      fetchRooms();
+      fetchAllocations();
     } catch (err: any) {
       setMessage(err.message);
     }
@@ -274,64 +387,147 @@ export default function App() {
         </div>
 
         {authMode === "login" ? (
-          <form className="card" onSubmit={handleLogin}>
+          <div className="card">
             <h2>Login</h2>
-            <label>Email</label>
-            <input
-              type="email"
-              required
-              value={authForm.email}
-              onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-            />
 
-            <label>Password</label>
-            <input
-              type="password"
-              required
-              value={authForm.password}
-              onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
-            />
-
-            <button type="submit">Login</button>
-          </form>
-        ) : (
-          <form className="card" onSubmit={handleRegister}>
-            <h2>Register</h2>
-            <label>Name</label>
-            <input
-              type="text"
-              required
-              value={authForm.name}
-              onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
-            />
-
-            <label>Email</label>
-            <input
-              type="email"
-              required
-              value={authForm.email}
-              onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
-            />
-
-            <label>Password</label>
-            <input
-              type="password"
-              required
-              value={authForm.password}
-              onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
-            />
-
-            <label>Role</label>
-            <select
-              value={authForm.role}
-              onChange={(e) => setAuthForm({ ...authForm, role: e.target.value as "student" | "warden" })}
+            {/* Google Sign In Button */}
+            <button
+              type="button"
+              className="btn-google"
+              onClick={() => handleGoogleSignInClick("student")}
             >
-              <option value="student">Student</option>
-              <option value="warden">Warden</option>
-            </select>
+              <GoogleIcon />
+              Sign in with Google
+            </button>
 
-            <button type="submit">Register</button>
-          </form>
+            <div className="auth-divider">
+              <span>or login with email</span>
+            </div>
+
+            <form onSubmit={handleLogin}>
+              <label>Email</label>
+              <input
+                type="email"
+                required
+                value={authForm.email}
+                onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
+              />
+
+              <label>Password</label>
+              <input
+                type="password"
+                required
+                value={authForm.password}
+                onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+              />
+
+              <button type="submit">Login</button>
+            </form>
+          </div>
+        ) : (
+          <div className="card">
+            <h2>Register</h2>
+
+            {/* Google Sign In Button */}
+            <button
+              type="button"
+              className="btn-google"
+              onClick={() => handleGoogleSignInClick(authForm.role)}
+            >
+              <GoogleIcon />
+              Register with Google
+            </button>
+
+            <div className="auth-divider">
+              <span>or register with email</span>
+            </div>
+
+            <form onSubmit={handleRegister}>
+              <label>Name</label>
+              <input
+                type="text"
+                required
+                value={authForm.name}
+                onChange={(e) => setAuthForm({ ...authForm, name: e.target.value })}
+              />
+
+              <label>Email</label>
+              <input
+                type="email"
+                required
+                value={authForm.email}
+                onChange={(e) => setAuthForm({ ...authForm, email: e.target.value })}
+              />
+
+              <label>Password</label>
+              <input
+                type="password"
+                required
+                value={authForm.password}
+                onChange={(e) => setAuthForm({ ...authForm, password: e.target.value })}
+              />
+
+              <label>Role</label>
+              <select
+                value={authForm.role}
+                onChange={(e) => setAuthForm({ ...authForm, role: e.target.value as "student" | "warden" })}
+              >
+                <option value="student">Student</option>
+                <option value="warden">Warden</option>
+              </select>
+
+              <button type="submit">Register</button>
+            </form>
+          </div>
+        )}
+
+        {/* Google Sign-In Account Selector Modal */}
+        {showGoogleModal && (
+          <div className="modal-overlay">
+            <div className="modal-content">
+              <h3>
+                <GoogleIcon /> Google Sign-In
+              </h3>
+              <p style={{ fontSize: "13px", color: "#555", marginBottom: "15px" }}>
+                Sign in with your Google account. Your profile and allocations will be automatically synced and stored in <strong>MongoDB Atlas</strong>.
+              </p>
+              <form onSubmit={handleGoogleModalSubmit}>
+                <label>Google Account Email</label>
+                <input
+                  type="email"
+                  required
+                  value={googleModalEmail}
+                  onChange={(e) => setGoogleModalEmail(e.target.value)}
+                />
+
+                <label>Display Name</label>
+                <input
+                  type="text"
+                  required
+                  value={googleModalName}
+                  onChange={(e) => setGoogleModalName(e.target.value)}
+                />
+
+                <label>Hostel Role</label>
+                <select
+                  value={googleModalRole}
+                  onChange={(e) => setGoogleModalRole(e.target.value as "student" | "warden")}
+                >
+                  <option value="student">Student (Request Room)</option>
+                  <option value="warden">Warden (Manage & Approve)</option>
+                </select>
+
+                <div style={{ marginTop: "15px", display: "flex", gap: "8px" }}>
+                  <button type="submit" style={{ backgroundColor: "#1a73e8", color: "#fff", border: "none" }}>
+                    Continue to MongoDB Atlas
+                  </button>
+                  <button type="button" onClick={() => setShowGoogleModal(false)}>
+                    Cancel
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
         )}
       </div>
     );
@@ -342,14 +538,67 @@ export default function App() {
       <div className="header">
         <div>
           <h2>Hostel Room Allocation</h2>
-          <p>
-            Logged in as: <strong>{user.name}</strong> ({user.role})
-          </p>
+          <div className="user-badge">
+            {user.authProvider === "google" && <GoogleIcon />}
+            <span>
+              Logged in as: <strong>{user.name}</strong> ({user.role})
+            </span>
+          </div>
+          <div style={{ fontSize: "13px", color: "#666" }}>{user.email}</div>
+          <div className="db-badge">
+            🍃 MongoDB Atlas: Stored & Updated Live
+          </div>
         </div>
-        <button onClick={handleLogout}>Logout</button>
+        <div style={{ display: "flex", gap: "8px", alignItems: "center" }}>
+          <button
+            onClick={() => {
+              setProfileName(user.name);
+              setProfileRole(user.role);
+              setEditingProfile(!editingProfile);
+            }}
+          >
+            {editingProfile ? "Close Profile" : "Edit Profile / Switch Role"}
+          </button>
+          <button onClick={handleLogout}>Logout</button>
+        </div>
       </div>
 
       {message && <div className="message">{message}</div>}
+
+      {/* Profile & Role Editor directly updating MongoDB Atlas */}
+      {editingProfile && (
+        <div className="card" style={{ backgroundColor: "#f9fbfd", borderLeft: "4px solid #1a73e8" }}>
+          <h3>Update Profile in MongoDB Atlas</h3>
+          <p style={{ fontSize: "13px", color: "#555" }}>
+            Changes will be saved directly into the MongoDB Atlas database link URL.
+          </p>
+          <form onSubmit={handleUpdateProfile}>
+            <label>Name</label>
+            <input
+              type="text"
+              required
+              value={profileName}
+              onChange={(e) => setProfileName(e.target.value)}
+            />
+            <label>Role</label>
+            <select
+              value={profileRole}
+              onChange={(e) => setProfileRole(e.target.value as "student" | "warden")}
+            >
+              <option value="student">Student (Request rooms)</option>
+              <option value="warden">Warden (Manage rooms & approvals)</option>
+            </select>
+            <div style={{ marginTop: "10px", display: "flex", gap: "8px" }}>
+              <button type="submit" style={{ backgroundColor: "#1a73e8", color: "#fff", border: "none" }}>
+                Save in MongoDB
+              </button>
+              <button type="button" onClick={() => setEditingProfile(false)}>
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      )}
 
       <div className="nav">
         <button

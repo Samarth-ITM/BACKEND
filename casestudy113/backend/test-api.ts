@@ -127,6 +127,69 @@ async function runTests() {
     });
     assert(badLoginRes.status === 400, "POST /api/auth/login - Invalid password rejected with 400");
 
+    // Test 8a: Google Sign-In creates new user in MongoDB Atlas
+    const googleNewRes = await fetch(`${BASE_URL}/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        name: "Google Student",
+        email: "googlestudent@gmail.com",
+        role: "student",
+        avatar: "https://lh3.googleusercontent.com/a/sample-photo",
+        googleId: "google-uid-12345"
+      })
+    });
+    const googleNewData = await googleNewRes.json();
+    assert(
+      googleNewRes.status === 200 &&
+      googleNewData.user.email === "googlestudent@gmail.com" &&
+      googleNewData.user.authProvider === "google" &&
+      !!googleNewData.token,
+      "POST /api/auth/google - New Google user saved to MongoDB Atlas with JWT"
+    );
+
+    // Test 8b: Google Sign-In existing user updates and returns token
+    const googleExistRes = await fetch(`${BASE_URL}/auth/google`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        email: "googlestudent@gmail.com",
+        avatar: "https://lh3.googleusercontent.com/a/sample-photo-updated"
+      })
+    });
+    const googleExistData = await googleExistRes.json();
+    assert(
+      googleExistRes.status === 200 &&
+      googleExistData.user.avatar === "https://lh3.googleusercontent.com/a/sample-photo-updated",
+      "POST /api/auth/google - Existing Google user updated in MongoDB Atlas"
+    );
+
+    // Test 8c: GET /api/auth/me returns fresh user data from MongoDB
+    const meRes = await fetch(`${BASE_URL}/auth/me`, {
+      headers: { Authorization: `Bearer ${googleNewData.token}` }
+    });
+    const meData = await meRes.json();
+    assert(
+      meRes.status === 200 && meData.user.email === "googlestudent@gmail.com",
+      "GET /api/auth/me - Fetches authenticated user from MongoDB database"
+    );
+
+    // Test 8d: PATCH /api/auth/profile updates profile and syncs directly to MongoDB
+    const profileRes = await fetch(`${BASE_URL}/auth/profile`, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${googleNewData.token}`
+      },
+      body: JSON.stringify({ name: "Google Student Updated" })
+    });
+    const profileData = await profileRes.json();
+    assert(
+      profileRes.status === 200 && profileData.user.name === "Google Student Updated",
+      "PATCH /api/auth/profile - Updates name and syncs immediately to MongoDB"
+    );
+
+
     // Test 9: Auth middleware rejects request without token
     const noAuthRes = await fetch(`${BASE_URL}/rooms`);
     assert(noAuthRes.status === 401, "GET /api/rooms - Rejected without token (401)");
