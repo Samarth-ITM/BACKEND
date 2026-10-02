@@ -93,8 +93,8 @@ casestudy113/
 ### Backend (`backend/.env`)
 ```env
 PORT=5001
-MONGO_URI=mongodb+srv://rougeparrot_db_user:UQRMntOSFbCKjo7P@casestudy113.4uag7mq.mongodb.net/hostel_room_allocation?retryWrites=true&w=majority
-JWT_SECRET=super_secret_hostel_allocation_jwt_key_2026_samarth
+MONGO_URI=<YOUR_MONGO_URI>
+JWT_SECRET=<YOUR_JWT_SECRET>
 ```
 
 ### Frontend (`frontend/.env`)
